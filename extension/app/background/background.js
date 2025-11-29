@@ -130,6 +130,13 @@ function recordTabTime(tabId) {
     
     const timeSpent = Date.now() - tabStartTime;
     
+    // Update time breakdown
+    chrome.storage.local.get(['timeBreakdown'], (result) => {
+      const breakdown = result.timeBreakdown || {};
+      breakdown[domain] = (breakdown[domain] || 0) + timeSpent;
+      chrome.storage.local.set({ timeBreakdown: breakdown });
+    });
+    
     // Check if this domain is a distraction
     chrome.storage.local.get(['watchlist', 'whitelist', 'timerState', 'lockInEnabled', 'listMode'], (result) => {
       const watchlist = result.watchlist || [];
@@ -146,12 +153,6 @@ function recordTabTime(tabId) {
         chrome.storage.local.set({ timerState });
       }
     });
-    
-    // Track overall activity
-    if (!tabActivity[domain]) {
-      tabActivity[domain] = 0;
-    }
-    tabActivity[domain] += timeSpent;
   });
 }
 
@@ -243,4 +244,21 @@ chrome.runtime.onInstalled.addListener(() => {
       });
     }
   });
+  
+  // Reset time breakdown daily
+  const checkAndResetBreakdown = () => {
+    chrome.storage.local.get(['lastBreakdownReset'], (result) => {
+      const today = new Date().toDateString();
+      if (result.lastBreakdownReset !== today) {
+        chrome.storage.local.set({ 
+          timeBreakdown: {},
+          lastBreakdownReset: today
+        });
+      }
+    });
+  };
+  
+  checkAndResetBreakdown();
+  // Check daily
+  setInterval(checkAndResetBreakdown, 60 * 60 * 1000); // Every hour
 });

@@ -29,6 +29,7 @@ const focusScore = document.getElementById('focusScore');
 
 // Settings elements
 const lockInToggle = document.getElementById('lockInToggle');
+const dimInactiveToggle = document.getElementById('dimInactiveToggle');
 const siteInput = document.getElementById('siteInput');
 const addSiteBtn = document.getElementById('addSiteBtn');
 const watchlistContainer = document.getElementById('watchlistContainer');
@@ -42,6 +43,11 @@ const blacklistSection = document.getElementById('blacklistSection');
 const whitelistSection = document.getElementById('whitelistSection');
 const postureToggle = document.getElementById('postureToggle');
 const eyeRestToggle = document.getElementById('eyeRestToggle');
+const postureInterval = document.getElementById('postureInterval');
+const eyeRestInterval = document.getElementById('eyeRestInterval');
+const timeBreakdown = document.getElementById('timeBreakdown');
+const clearBreakdownBtn = document.getElementById('clearBreakdownBtn');
+const statsBtn = document.getElementById('statsBtn');
 
 // Format time as HH:MM:SS
 function formatTime(milliseconds) {
@@ -91,6 +97,84 @@ function updateStats() {
   todayTotal.textContent = formatStatTime(timerState.todayTotalTime);
   distractionTime.textContent = formatStatTime(timerState.distractionTime);
   focusScore.textContent = calculateFocusScore() + '%';
+  loadTimeBreakdown();
+}
+
+// Load and display time breakdown
+function loadTimeBreakdown() {
+  chrome.storage.local.get(['timeBreakdown', 'watchlist', 'whitelist', 'listMode'], (result) => {
+    const breakdown = result.timeBreakdown || {};
+    const watchlist = result.watchlist || [];
+    const whitelist = result.whitelist || [];
+    const listMode = result.listMode || 'blacklist';
+    
+    const sites = Object.entries(breakdown)
+      .sort((a, b) => b[1] - a[1]) // Sort by time spent
+      .slice(0, 10); // Top 10 sites
+    
+    if (sites.length === 0) {
+      timeBreakdown.innerHTML = '<div class="breakdown-empty">No activity yet today</div>';
+      return;
+    }
+    
+    timeBreakdown.innerHTML = sites.map(([site, time]) => {
+      const category = categorizeSite(site, watchlist, whitelist, listMode);
+      return `
+        <div class="breakdown-item">
+          <div class="breakdown-site">
+            <span class="breakdown-site-name">${site}</span>
+            <span class="breakdown-category ${category.class}">${category.label}</span>
+          </div>
+          <span class="breakdown-time">${formatStatTime(time)}</span>
+        </div>
+      `;
+    }).join('');
+  });
+}
+
+// Categorize site as productive, distraction, or neutral
+function categorizeSite(site, watchlist, whitelist, listMode) {
+  const cleanSite = site.toLowerCase().replace(/^www\./, '');
+  
+  if (listMode === 'whitelist') {
+    const isWhitelisted = whitelist.some(w => {
+      const cleanW = w.toLowerCase().replace(/^www\./, '');
+      return cleanSite.includes(cleanW) || cleanW.includes(cleanSite);
+    });
+    
+    if (isWhitelisted) {
+      return { class: 'productive', label: 'Productive' };
+    } else {
+      return { class: 'distraction', label: 'Distraction' };
+    }
+  } else {
+    const isBlacklisted = watchlist.some(w => {
+      const cleanW = w.toLowerCase().replace(/^www\./, '');
+      return cleanSite.includes(cleanW) || cleanW.includes(cleanSite);
+    });
+    
+    if (isBlacklisted) {
+      return { class: 'distraction', label: 'Distraction' };
+    }
+    
+    const isWhitelisted = whitelist.some(w => {
+      const cleanW = w.toLowerCase().replace(/^www\./, '');
+      return cleanSite.includes(cleanW) || cleanW.includes(cleanSite);
+    });
+    
+    if (isWhitelisted) {
+      return { class: 'productive', label: 'Productive' };
+    }
+    
+    return { class: 'neutral', label: 'Neutral' };
+  }
+}
+
+// Clear time breakdown
+function clearTimeBreakdown() {
+  chrome.storage.local.set({ timeBreakdown: {} }, () => {
+    loadTimeBreakdown();
+  });
 }
 
 // Update button states
@@ -236,6 +320,9 @@ function stopTimer() {
     
     timerState.todayTotalTime += finalTime;
     
+    // Update all-time stats
+    updateAllTimeStats(finalTime);
+    
     timerState.isRunning = false;
     timerState.isPaused = false;
     timerState.startTime = null;
@@ -252,6 +339,48 @@ function stopTimer() {
     saveState();
     notifyTimerStatus(false);
   }
+}
+
+// Update all-time statistics
+function updateAllTimeStats(sessionTime) {
+  chrome.storage.local.get(['allTimeStats', 'weeklyStats', 'streak'], (result) => {
+    const allTimeStats = result.allTimeStats || {
+      totalTime: 0,
+      totalSessions: 0,
+      bestDayTime: 0,
+      bestDayDate: null
+    };
+    const weeklyStats = result.weeklyStats || {};
+    const currentStreak = result.streak || 0;
+    
+    // Update all-time
+    allTimeStats.totalTime += sessionTime;
+    allTimeStats.totalSessions += 1;
+    
+    // Update today's total
+    const today = new Date().toDateString();
+    const todayTotal = timerState.todayTotalTime;
+    
+    // Check if best day
+    if (todayTotal > allTimeStats.bestDayTime) {
+      allTimeStats.bestDayTime = todayTotal;
+      allTimeStats.bestDayDate = today;
+    }
+    
+    // Update weekly stats
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const dayName = days[new Date().getDay()];
+    weeklyStats[dayName] = (weeklyStats[dayName] || 0) + sessionTime;
+    
+    // Update streak (if worked today)
+    const newStreak = todayTotal > 0 ? currentStreak + 1 : 0;
+    
+    chrome.storage.local.set({
+      allTimeStats,
+      weeklyStats,
+      streak: newStreak
+    });
+  });
 }
 
 // Save state to chrome.storage
@@ -449,10 +578,15 @@ function removeSiteFromWhitelist(site) {
 
 // Load settings
 function loadSettings() {
-  chrome.storage.local.get(['lockInEnabled', 'postureEnabled', 'eyeRestEnabled', 'listMode'], (result) => {
+  chrome.storage.local.get(['lockInEnabled', 'dimInactive', 'postureEnabled', 'eyeRestEnabled', 'listMode', 'postureInterval', 'eyeRestInterval'], (result) => {
     lockInToggle.checked = result.lockInEnabled !== false;
+    if (dimInactiveToggle) dimInactiveToggle.checked = result.dimInactive !== false;
     postureToggle.checked = result.postureEnabled !== false;
     eyeRestToggle.checked = result.eyeRestEnabled !== false;
+    
+    // Load custom intervals
+    if (postureInterval) postureInterval.value = result.postureInterval || 30;
+    if (eyeRestInterval) eyeRestInterval.value = result.eyeRestInterval || 20;
     
     // Load list mode (blacklist or whitelist)
     const listMode = result.listMode || 'blacklist';
@@ -491,6 +625,22 @@ if (lockInToggle) {
   lockInToggle.addEventListener('change', () => {
     chrome.storage.local.set({ lockInEnabled: lockInToggle.checked }, () => {
       chrome.runtime.sendMessage({ type: 'WATCHLIST_UPDATED' });
+    });
+  });
+}
+
+// Dim inactive toggle
+if (dimInactiveToggle) {
+  dimInactiveToggle.addEventListener('change', () => {
+    chrome.storage.local.set({ dimInactive: dimInactiveToggle.checked }, () => {
+      // Notify all tabs
+      chrome.tabs.query({}, (tabs) => {
+        tabs.forEach((tab) => {
+          chrome.tabs.sendMessage(tab.id, {
+            type: 'DIM_SETTINGS_CHANGED'
+          }).catch(() => {});
+        });
+      });
     });
   });
 }
@@ -541,6 +691,43 @@ if (eyeRestToggle) {
         setupReminders();
       }
     });
+  });
+}
+
+// Interval inputs
+if (postureInterval) {
+  postureInterval.addEventListener('change', () => {
+    const value = Math.max(1, Math.min(120, parseInt(postureInterval.value) || 30));
+    postureInterval.value = value;
+    chrome.storage.local.set({ postureInterval: value }, () => {
+      if (timerState.isRunning && !timerState.isPaused) {
+        setupReminders();
+      }
+    });
+  });
+}
+
+if (eyeRestInterval) {
+  eyeRestInterval.addEventListener('change', () => {
+    const value = Math.max(1, Math.min(120, parseInt(eyeRestInterval.value) || 20));
+    eyeRestInterval.value = value;
+    chrome.storage.local.set({ eyeRestInterval: value }, () => {
+      if (timerState.isRunning && !timerState.isPaused) {
+        setupReminders();
+      }
+    });
+  });
+}
+
+// Clear breakdown button
+if (clearBreakdownBtn) {
+  clearBreakdownBtn.addEventListener('click', clearTimeBreakdown);
+}
+
+// Stats button
+if (statsBtn) {
+  statsBtn.addEventListener('click', () => {
+    window.location.href = 'stats.html';
   });
 }
 

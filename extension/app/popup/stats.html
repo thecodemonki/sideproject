@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Work Timer - Statistics</title>
+  <link rel="stylesheet" href="stats.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <button class="btn-back" id="backBtn">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 4L6 10L12 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div>
+        <h1 class="title">Statistics</h1>
+        <p class="subtitle">Your productivity insights</p>
+      </div>
+    </div>
+
+    <!-- Today's Summary -->
+    <div class="summary-cards">
+      <div class="summary-card">
+        <div class="summary-icon">⏱️</div>
+        <div class="summary-value" id="todayWork">0h 0m</div>
+        <div class="summary-label">Today's Work</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon">🎯</div>
+        <div class="summary-value" id="todayFocus">100%</div>
+        <div class="summary-label">Focus Score</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-icon">🔥</div>
+        <div class="summary-value" id="streak">0</div>
+        <div class="summary-label">Day Streak</div>
+      </div>
+    </div>
+
+    <!-- Weekly Chart -->
+    <div class="section">
+      <div class="section-header">
+        <h3 class="section-title">This Week</h3>
+        <div class="time-period">
+          <button class="period-btn active" data-period="week">Week</button>
+          <button class="period-btn" data-period="month">Month</button>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="weeklyChart"></canvas>
+      </div>
+    </div>
+
+    <!-- All-Time Stats -->
+    <div class="section">
+      <div class="section-header">
+        <h3 class="section-title">All Time</h3>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-label">Total Work Time</div>
+          <div class="stat-value" id="totalWork">0h</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Sessions Completed</div>
+          <div class="stat-value" id="totalSessions">0</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Average Session</div>
+          <div class="stat-value" id="avgSession">0m</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label">Best Day</div>
+          <div class="stat-value" id="bestDay">-</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Most Visited Sites -->
+    <div class="section">
+      <div class="section-header">
+        <h3 class="section-title">Most Visited Sites</h3>
+      </div>
+      <div class="sites-list" id="sitesList">
+        <div class="sites-empty">No data yet</div>
+      </div>
+    </div>
+
+    <!-- Goals Section -->
+    <div class="section">
+      <div class="section-header">
+        <h3 class="section-title">Daily Goal</h3>
+      </div>
+      <div class="goal-settings">
+        <input type="number" id="goalInput" class="goal-input" min="1" max="24" placeholder="4">
+        <span class="goal-label">hours per day</span>
+        <button class="btn-primary-small" id="setGoalBtn">Set Goal</button>
+      </div>
+      <div class="goal-progress" id="goalProgress" style="display: none;">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">0% of daily goal</div>
+      </div>
+    </div>
+
+    <!-- Reset Section -->
+    <div class="section">
+      <div class="section-header">
+        <h3 class="section-title">Data Management</h3>
+      </div>
+      <button class="btn-danger" id="resetStatsBtn">Reset All Statistics</button>
+      <p class="reset-warning">This will permanently delete all your productivity data</p>
+    </div>
+  </div>
+
+  <script src="stats.js"></script>
+</body>
+</html>

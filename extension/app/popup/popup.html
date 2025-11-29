@@ -9,8 +9,17 @@
 <body>
   <div class="container">
     <div class="header">
-      <h1 class="title">Work Timer</h1>
-      <p class="subtitle">Track your productive time</p>
+      <div>
+        <h1 class="title">Work Timer</h1>
+        <p class="subtitle">Track your productive time</p>
+      </div>
+      <button class="btn-stats" id="statsBtn" title="View Statistics">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="3" y="11" width="3" height="6" fill="currentColor" rx="1"/>
+          <rect x="8.5" y="7" width="3" height="10" fill="currentColor" rx="1"/>
+          <rect x="14" y="3" width="3" height="14" fill="currentColor" rx="1"/>
+        </svg>
+      </button>
     </div>
 
     <div class="timer-display">
@@ -59,16 +68,45 @@
       </div>
     </div>
 
+    <!-- Time Breakdown Section -->
+    <div class="section">
+      <div class="section-header">
+        <h3 class="section-title">Time Breakdown</h3>
+        <button class="btn-text" id="clearBreakdownBtn">Clear</button>
+      </div>
+      <p class="section-description">Where you spent time today</p>
+      <div class="time-breakdown" id="timeBreakdown">
+        <div class="breakdown-empty">No activity yet today</div>
+      </div>
+    </div>
+
     <!-- Settings Section -->
     <div class="section">
       <div class="section-header">
-        <h3 class="section-title">Lock In Mode</h3>
+        <h3 class="section-title">Focus Features</h3>
+      </div>
+      
+      <div class="feature-item">
+        <div class="feature-info">
+          <div class="feature-label">Lock In Mode</div>
+          <div class="feature-desc">Block distracting websites</div>
+        </div>
         <label class="toggle">
           <input type="checkbox" id="lockInToggle" checked>
           <span class="toggle-slider"></span>
         </label>
       </div>
-      <p class="section-description">Control website access during work sessions</p>
+      
+      <div class="feature-item">
+        <div class="feature-info">
+          <div class="feature-label">Dim Inactive Tabs</div>
+          <div class="feature-desc">Highlight current tab by dimming others</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="dimInactiveToggle" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
       
       <!-- Mode Selector -->
       <div class="mode-selector">
@@ -139,7 +177,11 @@
       <div class="reminder-item">
         <div class="reminder-info">
           <div class="reminder-label">Posture Check</div>
-          <div class="reminder-desc">Every 30 minutes</div>
+          <div class="reminder-controls">
+            <span class="reminder-desc">Every</span>
+            <input type="number" id="postureInterval" class="interval-input" min="1" max="120" value="30">
+            <span class="reminder-desc">minutes</span>
+          </div>
         </div>
         <label class="toggle">
           <input type="checkbox" id="postureToggle" checked>
@@ -150,7 +192,11 @@
       <div class="reminder-item">
         <div class="reminder-info">
           <div class="reminder-label">Eye Rest (20-20-20)</div>
-          <div class="reminder-desc">Every 20 minutes</div>
+          <div class="reminder-controls">
+            <span class="reminder-desc">Every</span>
+            <input type="number" id="eyeRestInterval" class="interval-input" min="1" max="120" value="20">
+            <span class="reminder-desc">minutes</span>
+          </div>
         </div>
         <label class="toggle">
           <input type="checkbox" id="eyeRestToggle" checked>

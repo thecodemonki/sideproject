@@ -400,6 +400,130 @@ body {
   padding: 16px;
 }
 
+/* Time Breakdown */
+.time-breakdown {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.breakdown-empty {
+  text-align: center;
+  color: #a1a1aa;
+  font-size: 12px;
+  padding: 24px 16px;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: #fafafa;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.breakdown-item:last-child {
+  margin-bottom: 0;
+}
+
+.breakdown-site {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.breakdown-site-name {
+  color: #09090b;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.breakdown-category {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.breakdown-category.productive {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.breakdown-category.distraction {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.breakdown-category.neutral {
+  background: #f4f4f5;
+  color: #71717a;
+}
+
+.breakdown-time {
+  color: #52525b;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  margin-left: 8px;
+}
+
+.btn-text {
+  background: none;
+  border: none;
+  color: #3b82f6;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.btn-text:hover {
+  background: #eff6ff;
+}
+
+/* Custom Interval Inputs */
+.reminder-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.interval-input {
+  width: 50px;
+  padding: 4px 8px;
+  border: 1.5px solid #e4e4e7;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 600;
+  text-align: center;
+  outline: none;
+  transition: all 0.2s;
+  color: #09090b;
+}
+
+.interval-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.interval-input::-webkit-inner-spin-button,
+.interval-input::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
 /* Reminders */
 .reminder-item {
   display: flex;

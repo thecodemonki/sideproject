@@ -1,9 +1,94 @@
-// Content script - handles the "lock in" overlay on web pages
+// Content script - handles the "lock in" overlay and tab dimming on web pages
 
 console.log("Work Timer content script loaded");
 
 let overlayActive = false;
 let overlayElement = null;
+let dimOverlayElement = null;
+let isTabActive = !document.hidden;
+
+// Listen for tab visibility changes
+document.addEventListener('visibilitychange', () => {
+  isTabActive = !document.hidden;
+  updateDimOverlay();
+});
+
+// Listen for window focus changes
+window.addEventListener('focus', () => {
+  isTabActive = true;
+  updateDimOverlay();
+});
+
+window.addEventListener('blur', () => {
+  isTabActive = false;
+  updateDimOverlay();
+});
+
+// Create dim overlay
+function createDimOverlay() {
+  if (dimOverlayElement) return dimOverlayElement;
+  
+  const dim = document.createElement('div');
+  dim.id = 'workTimerDimOverlay';
+  dim.style.cssText = `
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    z-index: 2147483646 !important;
+    pointer-events: none !important;
+    display: none !important;
+    transition: opacity 0.3s ease !important;
+  `;
+  
+  document.body.appendChild(dim);
+  dimOverlayElement = dim;
+  return dim;
+}
+
+// Update dim overlay based on tab activity and timer status
+function updateDimOverlay() {
+  chrome.storage.local.get(['dimInactive', 'timerState'], (result) => {
+    const dimEnabled = result.dimInactive !== false; // Default true
+    const timerState = result.timerState || {};
+    const timerActive = timerState.isRunning && !timerState.isPaused;
+    
+    if (dimEnabled && timerActive && !isTabActive) {
+      showDimOverlay();
+    } else {
+      hideDimOverlay();
+    }
+  });
+}
+
+// Show dim overlay
+function showDimOverlay() {
+  if (!dimOverlayElement) {
+    createDimOverlay();
+  }
+  dimOverlayElement.style.display = 'block';
+  setTimeout(() => {
+    if (dimOverlayElement) {
+      dimOverlayElement.style.opacity = '1';
+    }
+  }, 10);
+}
+
+// Hide dim overlay
+function hideDimOverlay() {
+  if (dimOverlayElement) {
+    dimOverlayElement.style.opacity = '0';
+    setTimeout(() => {
+      if (dimOverlayElement) {
+        dimOverlayElement.style.display = 'none';
+      }
+    }, 300);
+  }
+}
 
 // Create the overlay element
 function createOverlay() {
@@ -137,6 +222,7 @@ async function handleTimerStatus(isActive) {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'TIMER_STATUS_UPDATE') {
     handleTimerStatus(message.isActive);
+    updateDimOverlay();
   } else if (message.type === 'WATCHLIST_UPDATED') {
     // Recheck if current site should be blocked
     chrome.runtime.sendMessage({ type: 'GET_TIMER_STATUS' }, (response) => {
@@ -144,6 +230,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         handleTimerStatus(true);
       }
     });
+  } else if (message.type === 'DIM_SETTINGS_CHANGED') {
+    updateDimOverlay();
   }
   
   sendResponse({ success: true });
@@ -155,9 +243,11 @@ chrome.runtime.sendMessage({ type: 'GET_TIMER_STATUS' }, (response) => {
   if (response && response.isActive) {
     handleTimerStatus(true);
   }
+  updateDimOverlay();
 });
 
 // Cleanup on page unload
 window.addEventListener('beforeunload', () => {
   hideOverlay();
+  hideDimOverlay();
 });
